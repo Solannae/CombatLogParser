@@ -172,6 +172,28 @@ namespace Custom_WoL
             DestEntity = new Entity(long.Parse(tokens[5]), tokens[6], int.Parse(tokens[7]), int.Parse(tokens[8]));
         }
 
+        public void FindPrefix(string event_type)
+        {
+            if (event_type.Contains("SWING"))
+                Prefix = EventPrefix.SWING;
+            else if (event_type.Contains("RANGE"))
+                Prefix = EventPrefix.RANGE;
+            else if (event_type.Contains("ENVIRONMENTAL"))
+                Prefix = EventPrefix.ENVIRONMENTAL;
+            else if (event_type.Contains("SPELL_PERIODIC"))
+                Prefix = EventPrefix.SPELL_PERIODIC;
+            else if (event_type.Contains("SPELL_BUILDING"))
+                Prefix = EventPrefix.SPELL_BUILDING;
+            else if (event_type.Contains("SPELL"))
+                Prefix = EventPrefix.SPELL;
+        }
+
+        public void FindSuffix(string event_type)
+        {
+            Enum.TryParse(event_type.Split(new string[] { Prefix.ToString() }, StringSplitOptions.RemoveEmptyEntries)[0], out EventSuffix suff);
+            Suffix = suff;
+        }
+
         public void FillPrefixFlags(string[] tokens)
         {
             switch (Prefix)
