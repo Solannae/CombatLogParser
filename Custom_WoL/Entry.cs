@@ -118,6 +118,20 @@ namespace Custom_WoL
         public bool Critical { get; set; }
         public bool Glancing { get; set; }
         public bool Crushing { get; set; }
+
+        public DamageInfo(int _amount, int _overkill, int _school, int _res,
+                          int _block, int _abs, bool _crit, bool _glance, bool _crush)
+        {
+            Amount = _amount;
+            Overkill = _overkill;
+            School = _school;
+            Resisted = _res;
+            Blocked = _block;
+            Absorbed = _abs;
+            Critical = _crit;
+            Glancing = _glance;
+            Crushing = _crush;
+        }
     }
 
     public class HealingInfo
@@ -126,6 +140,14 @@ namespace Custom_WoL
         public int OverHealing { get; set; }
         public int Absorbed { get; set; }
         public bool Critical { get; set; }
+
+        public HealingInfo(int _amount, int _over, int _abs, bool _crit)
+        {
+            Amount = _amount;
+            OverHealing = _over;
+            Absorbed = _abs;
+            Critical = _crit;
+        }
     }
 
     public class Entry
@@ -174,14 +196,16 @@ namespace Custom_WoL
             switch (Suffix)
             {
                 case EventSuffix.DAMAGE:
-                    Damage = new DamageInfo();   //TODO
+                    Damage = new DamageInfo(int.Parse(tokens[12]), int.Parse(tokens[13]), int.Parse(tokens[14]),
+                                            int.Parse(tokens[15]), int.Parse(tokens[16]), int.Parse(tokens[17]),
+                                            bool.Parse(tokens[18]), bool.Parse(tokens[19]), bool.Parse(tokens[20]));
                     break;
 
                 case EventSuffix.MISSED:         //TODO
                     break;
 
                 case EventSuffix.HEAL:
-                    Healing = new HealingInfo(); //TODO
+                    Healing = new HealingInfo(int.Parse(tokens[12]), int.Parse(tokens[13]), int.Parse(tokens[14]), bool.Parse(tokens[15]));
                     break;
 
                 case EventSuffix.DRAIN:
