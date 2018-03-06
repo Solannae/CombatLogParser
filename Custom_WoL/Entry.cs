@@ -53,12 +53,30 @@ namespace Custom_WoL
         DEBUFF
     };
 
+    public enum EnvironmentalType
+    {
+        DROWNING,
+        FALLING,
+        FATIGUE,
+        FIRE,
+        LAVA,
+        SLIME
+    };
+
     public class Entity
     {
         public long Guid { get; set; }
         public string Name { get; set; }
         public int Flags { get; set; }
         public int Flags2 { get; set; }
+
+        public Entity(long _guid, string _name, int _flags, int _flags2)
+        {
+            Guid = _guid;
+            Name = _name;
+            Flags = _flags;
+            Flags2 = _flags2;
+        }
     }
 
     public class Spell
@@ -66,6 +84,13 @@ namespace Custom_WoL
         public int ID { get; set; }
         public string Name { get; set; }
         public int School { get; set; }
+
+        public Spell(int _id, string _name, int _school)
+        {
+            ID = _id;
+            Name = _name;
+            School = _school;
+        }
     }
 
     public class Entry
@@ -78,6 +103,31 @@ namespace Custom_WoL
         public Entity DestEntity { get; set; }
         public Spell SpellCast { get; set; }
         public Spell ExtraSpellCast { get; set; }
+        public EnvironmentalType Environment { get; set; }
         public AuraType Aura { get; set; }
+
+        public void FillBasic(string[] tokens)
+        {
+            SourceEntity = new Entity(long.Parse(tokens[1]), tokens[2], int.Parse(tokens[3]), int.Parse(tokens[4]));
+            DestEntity = new Entity(long.Parse(tokens[5]), tokens[6], int.Parse(tokens[7]), int.Parse(tokens[8]));
+        }
+
+        public void FillPrefixFlags(string[] tokens)
+        {
+            switch (Prefix)
+            {
+                case EventPrefix.RANGE:
+                case EventPrefix.SPELL:
+                case EventPrefix.SPELL_PERIODIC:
+                case EventPrefix.SPELL_BUILDING:
+                    SpellCast = new Spell(int.Parse(tokens[9]), tokens[10], int.Parse(tokens[11]));
+                    break;
+                case EventPrefix.ENVIRONMENTAL:
+                    Enum.TryParse(tokens[9], out EnvironmentalType Environment);
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 }
