@@ -13,7 +13,10 @@ namespace Custom_WoL
         SPELL,
         SPELL_PERIODIC,
         SPELL_BUILDING,
-        ENVIRONMENTAL
+        ENVIRONMENTAL,
+        ENCHANT,
+        PARTY,
+        UNIT
     };
 
     public enum EventSuffix
@@ -44,7 +47,12 @@ namespace Custom_WoL
         DURABILITY_DAMAGE_ALL,
         CREATE,
         SUMMON,
-        RESURRECT
+        RESURRECT,
+        KILL,
+        DIED,
+        DESTROYED,
+        APPLIED,
+        REMOVED
     };
 
     public enum MissType
@@ -176,12 +184,23 @@ namespace Custom_WoL
 
     public class MissedInfo
     {
+        public MissType TypeMiss { get; set; }
         public bool IsOffHand { get; set; }
         public int AmountMissed { get; set; }
 
-        public MissedInfo(bool _oh, int _amount)
+        public MissedInfo(MissType _type)
         {
-            IsOffHand = _oh;
+            TypeMiss = _type;
+        }
+
+        public MissedInfo(int _amount)
+        {
+            AmountMissed = _amount;
+        }
+
+        public MissedInfo(MissType _type, int _amount)
+        {
+            TypeMiss = _type; 
             AmountMissed = _amount;
         }
     }
@@ -210,6 +229,26 @@ namespace Custom_WoL
             Timestamp = _time;
         }
 
+        public int HexaToInt(string nb)
+        {
+            if (nb.Contains("0x")) //Could be handled better, aka not giving string not starting by 0x
+                nb = nb.Substring(2);
+            return int.Parse(nb, System.Globalization.NumberStyles.HexNumber);
+        }
+
+        public long HexaToLong(string nb)
+        {
+            nb = nb.Substring(2);
+            return long.Parse(nb, System.Globalization.NumberStyles.HexNumber);
+        }
+
+        public bool ToBool(string token)
+        {
+            if (token == "nil")
+                return false;
+            return true;
+        }
+
         public void Fill(string[] tokens)
         {
             FillBasic(tokens);
@@ -221,13 +260,15 @@ namespace Custom_WoL
 
         public void FillBasic(string[] tokens)
         {
-            SourceEntity = new Entity(long.Parse(tokens[1]), tokens[2], int.Parse(tokens[3]), int.Parse(tokens[4]));
-            DestEntity = new Entity(long.Parse(tokens[5]), tokens[6], int.Parse(tokens[7]), int.Parse(tokens[8]));
+            SourceEntity = new Entity(HexaToLong(tokens[1]), tokens[2], HexaToInt(tokens[3]), HexaToInt(tokens[4]));
+            DestEntity = new Entity(HexaToLong(tokens[5]), tokens[6], HexaToInt(tokens[7]), HexaToInt(tokens[8]));
         }
 
         public void FindPrefix(string event_type)
         {
-            if (event_type.Contains("SWING"))
+            if (event_type == "DAMAGE_SHIELD" || event_type == "DAMAGE_SPLIT" || event_type == "DAMAGE_SHIELD_MISSED")
+                Prefix = EventPrefix.SPELL;
+            else if (event_type.Contains("SWING"))
                 Prefix = EventPrefix.SWING;
             else if (event_type.Contains("RANGE"))
                 Prefix = EventPrefix.RANGE;
@@ -239,12 +280,26 @@ namespace Custom_WoL
                 Prefix = EventPrefix.SPELL_BUILDING;
             else if (event_type.Contains("SPELL"))
                 Prefix = EventPrefix.SPELL;
+            else if (event_type.Contains("ENCHANT"))
+                Prefix = EventPrefix.ENCHANT;
+            else if (event_type.Contains("PARTY"))
+                Prefix = EventPrefix.PARTY;
+            else if (event_type.Contains("UNIT"))
+                Prefix = EventPrefix.UNIT;
         }
 
         public void FindSuffix(string event_type)
         {
-            Enum.TryParse(event_type.Split(new string[] { Prefix.ToString() }, StringSplitOptions.RemoveEmptyEntries)[0], out EventSuffix suff);
-            Suffix = suff;
+            if (event_type == "DAMAGE_TYPE" || event_type == "DAMAGE_SPLIT")
+                Suffix = EventSuffix.DAMAGE;
+            else if (event_type == "DAMAGE_SHIELD_MISSED")
+                Suffix = EventSuffix.MISSED;
+            else
+            {
+                var suffix_str = event_type.Split(new string[] { Prefix.ToString() }, StringSplitOptions.RemoveEmptyEntries)[0].Substring(1);
+                Enum.TryParse(suffix_str, out EventSuffix suff);
+                Suffix = suff;
+            }
         }
 
         public void FillPrefixFlags(string[] tokens)
@@ -255,7 +310,7 @@ namespace Custom_WoL
                 case EventPrefix.SPELL:
                 case EventPrefix.SPELL_PERIODIC:
                 case EventPrefix.SPELL_BUILDING:
-                    SpellCast = new Spell(int.Parse(tokens[9]), tokens[10], int.Parse(tokens[11]));
+                    SpellCast = new Spell(HexaToInt(tokens[9]), tokens[10], HexaToInt(tokens[11]));
                     break;
                 case EventPrefix.ENVIRONMENTAL:
                     Enum.TryParse(tokens[9], out EnvironmentalType Environment);
@@ -271,47 +326,90 @@ namespace Custom_WoL
             switch (Suffix)
             {
                 case EventSuffix.DAMAGE:
-                    Damage = new DamageInfo(int.Parse(tokens[12]), int.Parse(tokens[13]), int.Parse(tokens[14]),
-                                            int.Parse(tokens[15]), int.Parse(tokens[16]), int.Parse(tokens[17]),
-                                            bool.Parse(tokens[18]), bool.Parse(tokens[19]), bool.Parse(tokens[20]));
+                    if (Prefix == EventPrefix.SWING)
+                        Damage = new DamageInfo(HexaToInt(tokens[9]), HexaToInt(tokens[10]), HexaToInt(tokens[11]),
+                                                HexaToInt(tokens[12]), HexaToInt(tokens[13]), HexaToInt(tokens[14]),
+                                                ToBool(tokens[15]), ToBool(tokens[16]), ToBool(tokens[17]));
+                    else if (Prefix == EventPrefix.ENVIRONMENTAL)
+                        Damage = new DamageInfo(HexaToInt(tokens[10]), HexaToInt(tokens[11]), HexaToInt(tokens[12]),
+                                                HexaToInt(tokens[13]), HexaToInt(tokens[14]), HexaToInt(tokens[15]),
+                                                ToBool(tokens[16]), ToBool(tokens[17]), ToBool(tokens[18]));
+                    else
+                        Damage = new DamageInfo(HexaToInt(tokens[12]), HexaToInt(tokens[13]), HexaToInt(tokens[14]),
+                                                HexaToInt(tokens[15]), HexaToInt(tokens[16]), HexaToInt(tokens[17]),
+                                                ToBool(tokens[18]), ToBool(tokens[19]), ToBool(tokens[20]));
                     break;
 
                 case EventSuffix.MISSED:
-                    Missed = new MissedInfo(bool.Parse(tokens[13]), int.Parse(tokens[15]));
+                    if (Prefix == EventPrefix.SWING)
+                    {
+                        Enum.TryParse(tokens[9], out MissType miss);
+                        switch (miss)
+                        {
+                            case MissType.DODGE:
+                            case MissType.IMMUNE:
+                            case MissType.MISS:
+                            case MissType.PARRY:
+                                Missed = new MissedInfo(miss);
+                                break;
+                            default:
+                                Missed = new MissedInfo(HexaToInt(tokens[10]));
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        Enum.TryParse(tokens[12], out MissType miss);
+                        switch (miss)
+                        {
+                            case MissType.DEFLECT:
+                            case MissType.DODGE:
+                            case MissType.EVADE:
+                            case MissType.IMMUNE:
+                            case MissType.MISS:
+                            case MissType.PARRY:
+                            case MissType.REFLECT:
+                                Missed = new MissedInfo(miss);
+                                break;
+                            default:
+                                Missed = new MissedInfo(HexaToInt(tokens[13]));
+                                break;
+                        }
+                    }
                     break;
 
                 case EventSuffix.HEAL:
-                    Healing = new HealingInfo(int.Parse(tokens[12]), int.Parse(tokens[13]), int.Parse(tokens[14]), bool.Parse(tokens[15]));
+                    Healing = new HealingInfo(HexaToInt(tokens[12]), HexaToInt(tokens[13]), HexaToInt(tokens[14]), ToBool(tokens[15]));
                     break;
 
                 case EventSuffix.DRAIN:
                 case EventSuffix.LEECH:
-                    Amount = int.Parse(tokens[12]);
-                    Power = (PowerType)int.Parse(tokens[13]);
-                    ExtraAmount = int.Parse(tokens[14]);
+                    Amount = HexaToInt(tokens[12]);
+                    Power = (PowerType)HexaToInt(tokens[13]);
+                    ExtraAmount = HexaToInt(tokens[14]);
                     break;
 
-                case EventSuffix.INTERRUPT:
                 case EventSuffix.DISPEL_FAILED:
-                    ExtraSpellCast = new Spell(int.Parse(tokens[12]), tokens[13], int.Parse(tokens[14]));
+                case EventSuffix.INTERRUPT:
+                    ExtraSpellCast = new Spell(HexaToInt(tokens[12]), tokens[13], HexaToInt(tokens[14]));
                     break;
 
                 case EventSuffix.EXTRA_ATTACKS:
                     Amount = int.Parse(tokens[12]);
                     break;
 
+                case EventSuffix.AURA_BROKEN_SPELL:
                 case EventSuffix.DISPEL:
                 case EventSuffix.STOLEN:
-                case EventSuffix.AURA_BROKEN_SPELL:
-                    ExtraSpellCast = new Spell(int.Parse(tokens[12]), tokens[13], int.Parse(tokens[14]));
+                    ExtraSpellCast = new Spell(HexaToInt(tokens[12]), tokens[13], HexaToInt(tokens[14]));
                     Enum.TryParse(tokens[15], out tmp_aura);
                     Aura = tmp_aura;
                     break;
 
                 case EventSuffix.AURA_APPLIED:
-                case EventSuffix.AURA_REMOVED:
-                case EventSuffix.AURA_REFRESH:
                 case EventSuffix.AURA_BROKEN:
+                case EventSuffix.AURA_REFRESH:
+                case EventSuffix.AURA_REMOVED:
                     Enum.TryParse(tokens[12], out tmp_aura);
                     Aura = tmp_aura;
                     break;
@@ -320,7 +418,7 @@ namespace Custom_WoL
                 case EventSuffix.AURA_REMOVED_DOSE:
                     Enum.TryParse(tokens[12], out tmp_aura);
                     Aura = tmp_aura;
-                    Amount = int.Parse(tokens[13]);
+                    Amount = HexaToInt(tokens[13]);
                     break;
 
                 default:
