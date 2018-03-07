@@ -67,6 +67,30 @@ namespace Custom_WoL
         DEBUFF
     };
 
+    public enum PowerType
+    {
+        HEALTH = -2,
+        MANA = 0,
+        RAGE = 1,
+        FOCUS = 2,
+        ENERGY = 3,
+        COMBO_POINTS = 4,
+        RUNES = 5,
+        RUNIC_POWER = 6,
+        SOUL_SHARDS = 7,
+        LUNAR_POWER = 8,
+        HOLY_POWER = 9,
+        ALTERNATE_POWER = 10,
+        MAELSTROM = 11,
+        CHI = 12,
+        INSANITY = 13,
+        OBSOLETE = 14,
+        OBSOLETE_2 = 15,
+        ARCANE_CHARGES = 16,
+        FURY = 17,
+        PAIN = 18
+    };
+
     public enum EnvironmentalType
     {
         DROWNING,
@@ -150,6 +174,18 @@ namespace Custom_WoL
         }
     }
 
+    public class MissedInfo
+    {
+        public bool IsOffHand { get; set; }
+        public int AmountMissed { get; set; }
+
+        public MissedInfo(bool _oh, int _amount)
+        {
+            IsOffHand = _oh;
+            AmountMissed = _amount;
+        }
+    }
+
     public class Entry
     {
         public DateTime Timestamp { get; set; }
@@ -162,9 +198,26 @@ namespace Custom_WoL
         public Spell ExtraSpellCast { get; set; }
         public DamageInfo Damage { get; set; }
         public HealingInfo Healing { get; set; }
+        public MissedInfo Missed { get; set; }
         public EnvironmentalType Environment { get; set; }
         public AuraType Aura { get; set; }
+        public PowerType Power { get; set; }
         public int Amount { get; set; }
+        public int ExtraAmount { get; set; }
+
+        public Entry(DateTime _time)
+        {
+            Timestamp = _time;
+        }
+
+        public void Fill(string[] tokens)
+        {
+            FillBasic(tokens);
+            FindPrefix(tokens[0]);
+            FindSuffix(tokens[0]);
+            FillPrefixFlags(tokens);
+            FillSuffixFlags(tokens);
+        }
 
         public void FillBasic(string[] tokens)
         {
@@ -223,7 +276,8 @@ namespace Custom_WoL
                                             bool.Parse(tokens[18]), bool.Parse(tokens[19]), bool.Parse(tokens[20]));
                     break;
 
-                case EventSuffix.MISSED:         //TODO
+                case EventSuffix.MISSED:
+                    Missed = new MissedInfo(bool.Parse(tokens[13]), int.Parse(tokens[15]));
                     break;
 
                 case EventSuffix.HEAL:
@@ -232,7 +286,10 @@ namespace Custom_WoL
 
                 case EventSuffix.DRAIN:
                 case EventSuffix.LEECH:
-                    break;                       //TODO
+                    Amount = int.Parse(tokens[12]);
+                    Power = (PowerType)int.Parse(tokens[13]);
+                    ExtraAmount = int.Parse(tokens[14]);
+                    break;
 
                 case EventSuffix.INTERRUPT:
                 case EventSuffix.DISPEL_FAILED:
