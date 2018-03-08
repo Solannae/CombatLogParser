@@ -13,5 +13,11 @@ namespace Custom_WoL
         public long HealingDone { get; set; }
         public long HealingTaken { get; set; }
         public bool IsDead { get; set; }
+        public DateTime LastActive { get; set; }
+
+        public CombatInfo()
+        {
+            IsDead = true;
+        }
     }
 }
