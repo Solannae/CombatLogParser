@@ -27,9 +27,9 @@ namespace Custom_WoL
                                 int.Parse(hour_part.Split(':')[2].Split('.')[1]));
         }
 
-        public List<Entry> Parse()
+        public Queue<Entry> Parse()
         {
-            List<Entry> entries = new List<Entry>();
+            Queue<Entry> entries = new Queue<Entry>();
             using (var file = File.OpenRead(Path))  
             using (var reader = new StreamReader(file))
             {
@@ -40,7 +40,7 @@ namespace Custom_WoL
                     var arguments = Regex.Split(token.Split(new string[] { "  " }, 2, StringSplitOptions.RemoveEmptyEntries)[1], ",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
                     Entry tmp_entry = new Entry(FormatDateTime(timestamp));
                     tmp_entry.Fill(arguments);
-                    entries.Add(tmp_entry);
+                    entries.Enqueue(tmp_entry);
                 }
             }
             return entries;
@@ -53,7 +53,7 @@ namespace Custom_WoL
         {
             string path = "D:\\Users\\Solannae\\Desktop\\World of Warcraft - Cataclysm enGB\\Logs\\WoWCombatLog.txt";
             Parser wol = new Parser(path);
-            List<Entry> entries = wol.Parse();
+            Queue<Entry> entries = wol.Parse();
             foreach (var entry in entries)
             {
                 Console.WriteLine(entry.Prefix.ToString() + "_" + entry.Suffix.ToString());
