@@ -12,6 +12,7 @@ namespace Custom_WoL
         public string Name { get; set; }
         public int Flags { get; set; }
         public int Flags2 { get; set; }
+        public bool IsSummoned { get; set; }
 
         public Entity(ulong _guid, string _name, int _flags, int _flags2)
         {
