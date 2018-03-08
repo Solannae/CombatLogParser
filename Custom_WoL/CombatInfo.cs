@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Custom_WoL
 {
-    class CombatInfo
+    public class CombatInfo
     {
         public long DamageDone { get; set; }
         public long DamageTaken { get; set; }
