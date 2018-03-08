@@ -15,14 +15,12 @@ namespace Custom_WoL
         public Dictionary<Entity, CombatInfo> Players { get; set; }
         public Dictionary<Entity, CombatInfo> NPC { get; set; }
         public Dictionary<Entity, CombatInfo> Pets { get; set; }
-        public Dictionary<Entity, CombatInfo> Summons { get; set; }
 
         public Encounter(Queue<Entry> entries)
         {
             Players = new Dictionary<Entity, CombatInfo>();
             NPC = new Dictionary<Entity, CombatInfo>();
             Pets = new Dictionary<Entity, CombatInfo>();
-            Summons = new Dictionary<Entity, CombatInfo>();
             Fill(entries);
         }
 
@@ -59,11 +57,22 @@ namespace Custom_WoL
 
             if (is_player)
             {
+                //Inactivity timer
+                foreach (var player in Players.Where(u => u.Value.IsDead == false))
+                {
+                    if (curr_time - player.Value.LastActive > five_secs)
+                        player.Value.IsDead = true;
+                }
+
                 if (Players.All(u => u.Value.IsDead == true))
+                {
                     IsOver = true;
+                    End = curr_time;
+                }
             }
             else
             {
+                //Inactivity timer
                 foreach (var npc in NPC.Where(u => u.Value.IsDead == false))
                 {
                     if (curr_time - npc.Value.LastActive > five_secs)
