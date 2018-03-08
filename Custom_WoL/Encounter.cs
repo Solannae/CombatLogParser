@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Custom_WoL
 {
-    class Encounter
+    public class Encounter
     {
         public DateTime Start { get; set; }
         public DateTime End { get; set; }
