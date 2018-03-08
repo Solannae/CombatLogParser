@@ -13,14 +13,16 @@ namespace Custom_WoL
         public bool IsOver { get; set; }
 
         public Dictionary<Entity, CombatInfo> Players { get; set; }
-        public Dictionary<Entity, CombatInfo> Enemies { get; set; }
+        public Dictionary<Entity, CombatInfo> NPC { get; set; }
         public Dictionary<Entity, CombatInfo> Pets { get; set; }
+        public Dictionary<Entity, CombatInfo> Summons { get; set; }
 
         public Encounter(Queue<Entry> entries)
         {
             Players = new Dictionary<Entity, CombatInfo>();
-            Enemies = new Dictionary<Entity, CombatInfo>();
+            NPC = new Dictionary<Entity, CombatInfo>();
             Pets = new Dictionary<Entity, CombatInfo>();
+            Summons = new Dictionary<Entity, CombatInfo>();
             Fill(entries);
         }
 
@@ -36,9 +38,9 @@ namespace Custom_WoL
                 }
                 else if (entity.Guid.IsCreatureOrVehicle())
                 {
-                    if (!Enemies.ContainsKey(entity))
-                        Enemies.Add(entity, new CombatInfo());
-                    return Enemies[entity];
+                    if (!NPC.ContainsKey(entity))
+                        NPC.Add(entity, new CombatInfo());
+                    return NPC[entity];
                 }
                 else if (entity.Guid.IsPet())
                 {
@@ -51,8 +53,10 @@ namespace Custom_WoL
             return null;
         }
 
-        public void CheckCombatEnd(bool is_player)
+        public void CheckCombatEnd(bool is_player, DateTime curr_time)
         {
+            TimeSpan five_secs = new TimeSpan(0, 0, 5);
+
             if (is_player)
             {
                 if (Players.All(u => u.Value.IsDead == true))
@@ -60,8 +64,17 @@ namespace Custom_WoL
             }
             else
             {
-                if (Enemies.All(u => u.Value.IsDead == true))
+                foreach (var npc in NPC.Where(u => u.Value.IsDead == false))
+                {
+                    if (curr_time - npc.Value.LastActive > five_secs)
+                        npc.Value.IsDead = true;
+                }
+
+                if (NPC.All(u => u.Value.IsDead == true))
+                {
                     IsOver = true;
+                    End = curr_time;
+                }
             }
         }
 
@@ -74,17 +87,32 @@ namespace Custom_WoL
             {
                 case Entry.EventSuffix.DAMAGE:
                     if (source != null)
+                    {
                         source.DamageDone += entry.Damage.Amount + entry.Damage.Overkill;
+                        if (source.IsDead)
+                            source.IsDead = false;
+                        source.LastActive = entry.Timestamp;
+                    }
                     dest.DamageTaken += entry.Damage.Amount;
+                    dest.LastActive = entry.Timestamp;
                     break;
                 case Entry.EventSuffix.HEAL:
                     //Do not take into account Overhealing and Absorbs for now
                     source.HealingDone += entry.Healing.Amount;
+                    if (source.IsDead)
+                        source.IsDead = false;
+                    source.LastActive = entry.Timestamp;
                     dest.HealingTaken += entry.Healing.Amount;
+                    dest.LastActive = entry.Timestamp;
+                    break;
+                //Flag totems and apparitions (and more...) as summons
+                case Entry.EventSuffix.SUMMON:
+                    entry.DestEntity.IsSummoned = true;
                     break;
                 case Entry.EventSuffix.DIED:
+                case Entry.EventSuffix.DESTROYED:
                     dest.IsDead = true;
-                    CheckCombatEnd(entry.DestEntity.Guid.IsPlayer());
+                    CheckCombatEnd(entry.DestEntity.Guid.IsPlayer(), entry.Timestamp);
                     break;
             }
         }
