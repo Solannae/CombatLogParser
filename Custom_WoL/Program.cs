@@ -51,13 +51,28 @@ namespace Custom_WoL
     {
         static void Main(string[] args)
         {
-            string path = "D:\\Users\\Solannae\\Desktop\\World of Warcraft - Cataclysm enGB\\Logs\\WoWCombatLog.txt";
+            string path = "Tests\\WoWCombatLog.txt";
             Parser wol = new Parser(path);
             Queue<Entry> entries = wol.Parse();
-            foreach (var entry in entries)
+            List<Encounter> encounters = new List<Encounter>();
+            
+            while (entries.Count != 0)  
+                encounters.Add(new Encounter(entries));
+
+            foreach (var fight in encounters)
             {
-                Console.WriteLine(entry.Prefix.ToString() + "_" + entry.Suffix.ToString());
+                Console.WriteLine();
+                Console.WriteLine("---------------------------------------------------");
+                Console.WriteLine("Begin : " + fight.Start);
+                Console.WriteLine("---------------------------------------------------\nDamage Taken :");
+                foreach (var enemy in fight.Enemies.Where(u => u.Value.DamageTaken != 0))
+                {
+                    Console.WriteLine(enemy.Key.Name + " Dakage Taken : " + enemy.Value.DamageTaken);
+                }
+
             }
+
+            Console.ReadKey();
         }
     }
 }
