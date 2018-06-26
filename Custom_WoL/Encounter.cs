@@ -10,7 +10,10 @@ namespace Custom_WoL
     {
         public DateTime Start { get; set; }
         public DateTime End { get; set; }
+        public DateTime? LastDamage { get; set; }
         public bool IsOver { get; set; }
+        public TimeSpan Inactivity { get; set; }
+        public TimeSpan DmgInactivity { get; set; }
 
         public Dictionary<Entity, CombatInfo> Players { get; set; }
         public Dictionary<Entity, CombatInfo> NPC { get; set; }
@@ -21,6 +24,9 @@ namespace Custom_WoL
             Players = new Dictionary<Entity, CombatInfo>();
             NPC = new Dictionary<Entity, CombatInfo>();
             Pets = new Dictionary<Entity, CombatInfo>();
+            LastDamage = null;
+            Inactivity = new TimeSpan(0, 0, 0, 5);
+            DmgInactivity = new TimeSpan(0, 0, 0, 10);
             Fill(entries);
         }
 
@@ -53,37 +59,27 @@ namespace Custom_WoL
 
         public void CheckCombatEnd(bool is_player, DateTime curr_time)
         {
-            TimeSpan five_secs = new TimeSpan(0, 0, 5);
+            Dictionary<Entity, CombatInfo> data;
 
             if (is_player)
-            {
-                //Inactivity timer
-                foreach (var player in Players.Where(u => u.Value.IsDead == false))
-                {
-                    if (curr_time - player.Value.LastActive > five_secs)
-                        player.Value.IsDead = true;
-                }
-
-                if (Players.All(u => u.Value.IsDead == true))
-                {
-                    IsOver = true;
-                    End = curr_time;
-                }
-            }
+                data = Players;
             else
-            {
-                //Inactivity timer
-                foreach (var npc in NPC.Where(u => u.Value.IsDead == false))
-                {
-                    if (curr_time - npc.Value.LastActive > five_secs)
-                        npc.Value.IsDead = true;
-                }
+                data = NPC;
 
-                if (NPC.All(u => u.Value.IsDead == true))
-                {
-                    IsOver = true;
+            //Inactivity timer
+            foreach (var entity in data.Where(u => u.Value.IsDead == false))
+            {
+                if (curr_time - entity.Value.LastActive > Inactivity)
+                    entity.Value.IsDead = true;
+            }
+
+            if (curr_time - LastDamage < DmgInactivity || data.All(u => u.Value.IsDead == true))
+            {
+                IsOver = true;
+                if (LastDamage.HasValue)
+                    End = LastDamage.Value;
+                else
                     End = curr_time;
-                }
             }
         }
 
@@ -104,6 +100,9 @@ namespace Custom_WoL
                     }
                     dest.DamageTaken += entry.Damage.Amount;
                     dest.LastActive = entry.Timestamp;
+                    if (!LastDamage.HasValue)
+                        Start = entry.Timestamp;
+                    LastDamage = entry.Timestamp;
                     break;
                 case Entry.EventSuffix.HEAL:
                     //Do not take into account Overhealing and Absorbs for now
@@ -131,11 +130,18 @@ namespace Custom_WoL
             Start = entries.First().Timestamp;
             Entry current;
 
-            while (!IsOver && entries.Count > 0)
+            do
             {
                 current = entries.Dequeue();
-                AddEntry(current);
-            }
+
+                if (LastDamage.HasValue && current.Timestamp - LastDamage > DmgInactivity)
+                    IsOver = true;
+                else
+                    AddEntry(current);
+            } while (!IsOver && entries.Count > 0);
+
+            if (entries.Count == 0 && !IsOver)
+                IsOver = true;
         }
     }
 }
