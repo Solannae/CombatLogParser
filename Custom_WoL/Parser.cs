@@ -56,6 +56,52 @@ namespace Custom_WoL
             //Remove encounters shorter than 5 seconds
             TimeSpan five_sec = new TimeSpan(0, 0, 5);
             Encounters.RemoveAll(u => u.End - u.Start < five_sec);
+            Encounters.RemoveAll(u => u.NPC.Count == 0);
+            Encounters.RemoveAll(u => u.Players.All(v => v.Value.DamageDone == 0));
+            MergeCloseEncounters();
+        }
+
+        public void MergeCloseEncounters()
+        {
+            var i = 0;
+            while (i < Encounters.Count - 1)
+            {
+                TimeSpan fifteen_sec = new TimeSpan(0, 0, 0, 15);
+                if (Encounters[i + 1].Start - Encounters[i].End < fifteen_sec)
+                {
+                    //Merge both encounters
+                    Encounters[i].End = Encounters[i + 1].End;
+
+                    //Merge player list
+                    foreach (var player in Encounters[i + 1].Players)
+                    {
+                        if (!Encounters[i].Players.ContainsKey(player.Key))
+                            Encounters[i].Players.Add(player.Key, new CombatInfo());
+                        Encounters[i].Players[player.Key] += player.Value;
+                    }
+
+                    //Merge NPC list
+                    foreach (var npc in Encounters[i + 1].NPC)
+                    {
+                        if (!Encounters[i].NPC.ContainsKey(npc.Key))
+                            Encounters[i].NPC.Add(npc.Key, new CombatInfo());
+                        Encounters[i].NPC[npc.Key] += npc.Value;
+                    }
+
+                    //Merge pets list
+                    foreach (var pet in Encounters[i + 1].Pets)
+                    {
+                        if (!Encounters[i].Pets.ContainsKey(pet.Key))
+                            Encounters[i].Pets.Add(pet.Key, new CombatInfo());
+                        Encounters[i].Pets[pet.Key] += pet.Value;
+                    }
+
+                    Encounters.RemoveAt(i + 1);
+                    --i;
+                }
+
+                ++i;
+            }
         }
     }
 }
