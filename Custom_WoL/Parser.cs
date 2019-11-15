@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Custom_WoL.Libs;
 
 namespace Custom_WoL
 {
@@ -72,29 +73,9 @@ namespace Custom_WoL
                     //Merge both encounters
                     Encounters[i].End = Encounters[i + 1].End;
 
-                    //Merge player list
-                    foreach (var player in Encounters[i + 1].Players)
-                    {
-                        if (!Encounters[i].Players.ContainsKey(player.Key))
-                            Encounters[i].Players.Add(player.Key, new CombatInfo());
-                        Encounters[i].Players[player.Key] += player.Value;
-                    }
-
-                    //Merge NPC list
-                    foreach (var npc in Encounters[i + 1].NPC)
-                    {
-                        if (!Encounters[i].NPC.ContainsKey(npc.Key))
-                            Encounters[i].NPC.Add(npc.Key, new CombatInfo());
-                        Encounters[i].NPC[npc.Key] += npc.Value;
-                    }
-
-                    //Merge pets list
-                    foreach (var pet in Encounters[i + 1].Pets)
-                    {
-                        if (!Encounters[i].Pets.ContainsKey(pet.Key))
-                            Encounters[i].Pets.Add(pet.Key, new CombatInfo());
-                        Encounters[i].Pets[pet.Key] += pet.Value;
-                    }
+                    ArrayManipulation.MergeEncounterDictionaries(Encounters[i].Players, Encounters[i + 1].Players);
+                    ArrayManipulation.MergeEncounterDictionaries(Encounters[i].NPC, Encounters[i + 1].NPC);
+                    ArrayManipulation.MergeEncounterDictionaries(Encounters[i].Pets, Encounters[i + 1].Pets);
 
                     Encounters.RemoveAt(i + 1);
                     --i;
