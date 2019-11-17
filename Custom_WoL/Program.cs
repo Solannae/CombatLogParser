@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Linq;
 
 namespace Custom_WoL
@@ -7,8 +8,7 @@ namespace Custom_WoL
     {
         static void Main(string[] args)
         {
-            string path = "Tests\\WoWCombatLog.txt";
-            Parser parser = new Parser(path);
+            Parser parser = new Parser(ConfigurationManager.AppSettings["logPath"]);
             parser.Parse();
             parser.BuildEncountersList();            
 
