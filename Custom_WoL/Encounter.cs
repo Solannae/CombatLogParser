@@ -32,24 +32,20 @@ namespace Custom_WoL
         {
             if (entity.Guid != 0)
             {
+                Dictionary<Entity, CombatInfo> correspondingContainer;
+
                 if (entity.Guid.IsPlayer())
-                { 
-                    if (!Players.ContainsKey(entity))
-                        Players.Add(entity, new CombatInfo());
-                    return Players[entity];
-                }
+                    correspondingContainer = Players;
                 else if (entity.Guid.IsCreatureOrVehicle())
-                {
-                    if (!NPC.ContainsKey(entity))
-                        NPC.Add(entity, new CombatInfo());
-                    return NPC[entity];
-                }
+                    correspondingContainer = NPC;
                 else if (entity.Guid.IsPet())
-                {
-                    if (!Pets.ContainsKey(entity))
-                        Pets.Add(entity, new CombatInfo());
-                    return Pets[entity];
-                }
+                    correspondingContainer = Pets;
+                else
+                    return null;
+
+                if (!correspondingContainer.ContainsKey(entity))
+                    correspondingContainer.Add(entity, new CombatInfo());
+                return correspondingContainer[entity];
             }
 
             return null;
@@ -57,12 +53,7 @@ namespace Custom_WoL
 
         public void CheckCombatEnd(bool is_player, DateTime curr_time)
         {
-            Dictionary<Entity, CombatInfo> data;
-
-            if (is_player)
-                data = Players;
-            else
-                data = NPC;
+            var data = (is_player) ? Players : NPC;
 
             //Inactivity timer
             foreach (var entity in data.Where(u => u.Value.IsDead == false))
@@ -71,13 +62,10 @@ namespace Custom_WoL
                     entity.Value.IsDead = true;
             }
 
-            if (curr_time - LastDamage < DmgInactivity || data.All(u => u.Value.IsDead == true))
+            if (curr_time - LastDamage > DmgInactivity || data.All(u => u.Value.IsDead == true))
             {
                 IsOver = true;
-                if (LastDamage.HasValue)
-                    End = LastDamage.Value;
-                else
-                    End = curr_time;
+                End = (LastDamage.HasValue) ? LastDamage.Value : curr_time;
             }
         }
 
@@ -96,25 +84,33 @@ namespace Custom_WoL
                             source.IsDead = false;
                         source.LastActive = entry.Timestamp;
                     }
+
                     dest.DamageTaken += entry.Damage.Amount;
                     dest.LastActive = entry.Timestamp;
+                    
                     if (!LastDamage.HasValue)
                         Start = entry.Timestamp;
+                    
                     LastDamage = entry.Timestamp;
                     break;
+
                 case Entry.EventSuffix.HEAL:
                     //Do not take into account Overhealing and Absorbs for now
                     source.HealingDone += entry.Healing.Amount;
+
                     if (source.IsDead)
                         source.IsDead = false;
+                    
                     source.LastActive = entry.Timestamp;
                     dest.HealingTaken += entry.Healing.Amount;
                     dest.LastActive = entry.Timestamp;
                     break;
+
                 //Flag totems and apparitions (and more...) as summons
                 case Entry.EventSuffix.SUMMON:
                     entry.DestEntity.IsSummoned = true;
                     break;
+
                 case Entry.EventSuffix.DIED:
                 case Entry.EventSuffix.DESTROYED:
                     dest.IsDead = true;
@@ -126,11 +122,10 @@ namespace Custom_WoL
         public void Fill(Queue<Entry> entries)
         {
             Start = entries.First().Timestamp;
-            Entry current;
 
             do
             {
-                current = entries.Dequeue();
+                var current = entries.Dequeue();
 
                 if (LastDamage.HasValue && current.Timestamp - LastDamage > DmgInactivity)
                     IsOver = true;

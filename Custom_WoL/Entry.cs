@@ -21,8 +21,6 @@ namespace Custom_WoL
         public int Amount { get; set; }
         public int ExtraAmount { get; set; }
 
-        
-
         public Entry(DateTime _time)
         {
             Timestamp = _time;
@@ -30,22 +28,23 @@ namespace Custom_WoL
 
         public int HexaToInt(string nb)
         {
-            if (nb.Contains("0x")) //Could be handled better, aka not giving string not starting by 0x
-                nb = nb.Substring(2);
+            if (nb.Contains("0x"))
+                nb = nb.Replace("0x", string.Empty);
+
             return int.Parse(nb, System.Globalization.NumberStyles.HexNumber);
         }
 
         public ulong HexaToLong(string nb)
         {
-            nb = nb.Substring(2);
+            if (nb.Contains("0x"))
+                nb = nb.Replace("0x", string.Empty);
+
             return ulong.Parse(nb, System.Globalization.NumberStyles.HexNumber);
         }
 
         public bool ToBool(string token)
         {
-            if (token == "nil")
-                return false;
-            return true;
+            return token == "nil";
         }
 
         public void Fill(string[] tokens)
@@ -113,9 +112,12 @@ namespace Custom_WoL
                 case EventPrefix.SPELL_BUILDING:
                     SpellCast = new Spell(HexaToInt(tokens[9]), tokens[10], HexaToInt(tokens[11]));
                     break;
+
                 case EventPrefix.ENVIRONMENTAL:
-                    Enum.TryParse(tokens[9], out EnvironmentalType Environment);
+                    Enum.TryParse(tokens[9], out EnvironmentalType env);
+                    Environment = env;
                     break;
+
                 default:
                     break;
             }

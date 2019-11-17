@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -18,15 +19,6 @@ namespace Custom_WoL
             Path = path;
         }
 
-        public DateTime FormatDateTime(string time)
-        {
-            string date_part = time.Split(' ')[0];
-            string hour_part = time.Split(' ')[1];
-            return new DateTime(DateTime.Now.Year, int.Parse(date_part.Split('/')[0]), int.Parse(date_part.Split('/')[1]),
-                                int.Parse(hour_part.Split(':')[0]), int.Parse(hour_part.Split(':')[1]), int.Parse(hour_part.Split(':')[2].Split('.')[0]),
-                                int.Parse(hour_part.Split(':')[2].Split('.')[1]));
-        }
-
         public void Parse()
         {
             Entries = new Queue<Entry>();
@@ -39,7 +31,7 @@ namespace Custom_WoL
                     var timestamp = token.Split(new string[] { "  " }, 2, StringSplitOptions.RemoveEmptyEntries)[0];
                     //Split CSV without taking into account quoted commas
                     var arguments = Regex.Split(token.Split(new string[] { "  " }, 2, StringSplitOptions.RemoveEmptyEntries)[1], ",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
-                    Entry tmp_entry = new Entry(FormatDateTime(timestamp));
+                    Entry tmp_entry = new Entry(DateTime.ParseExact(timestamp, "MM/dd hh:mm:ss.fff", CultureInfo.InvariantCulture));
                     tmp_entry.Fill(arguments);
                     Entries.Enqueue(tmp_entry);
                 }
