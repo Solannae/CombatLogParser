@@ -125,12 +125,13 @@ namespace Custom_WoL
 
             do
             {
-                var current = entries.Dequeue();
-
-                if (LastDamage.HasValue && current.Timestamp - LastDamage > DmgInactivity)
+                if (LastDamage.HasValue && entries.First().Timestamp - LastDamage > DmgInactivity)
                     IsOver = true;
                 else
+                {
+                    var current = entries.Dequeue();
                     AddEntry(current);
+                }
             } while (!IsOver && entries.Count > 0);
 
             if (entries.Count == 0 && !IsOver)
