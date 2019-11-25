@@ -2,30 +2,26 @@
 {
     public class Entity
     {
-        public ObjectGuid Guid { get; set; }
+        public ObjectGuid Guid { get; }
         public string Name { get; set; }
         public int Flags { get; set; }
         public int Flags2 { get; set; }
         public bool IsSummoned { get; set; }
 
-        public Entity(ulong _guid, string _name, int _flags, int _flags2)
+        public Entity(ulong guid, string name, int flags, int flags2)
         {
-            Guid = new ObjectGuid(_guid);
-            Name = _name;
-            Flags = _flags;
-            Flags2 = _flags2;
+            Guid = new ObjectGuid(guid);
+            Name = name;
+            Flags = flags;
+            Flags2 = flags2;
         }
 
         public override bool Equals(object obj)
         {
-            if (obj == null)
+            if (!(obj is Entity temp))
                 return false;
 
-            Entity obj_ = obj as Entity;
-            if (obj_ == null)
-                return false;
-
-            return (obj_.Guid == Guid && obj_.Name == Name);
+            return (temp.Guid == Guid && temp.Name == Name);
         }
 
         public override int GetHashCode()

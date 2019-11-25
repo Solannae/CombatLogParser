@@ -12,18 +12,18 @@
         public bool Glancing { get; set; }
         public bool Crushing { get; set; }
 
-        public DamageInfo(int _amount, int _overkill, int _school, int _res,
-                          int _block, int _abs, bool _crit, bool _glance, bool _crush)
+        public DamageInfo(int amount, int overkill, int school, int res,
+                          int block, int abs, bool crit, bool glance, bool crush)
         {
-            Amount = _amount;
-            Overkill = _overkill;
-            School = _school;
-            Resisted = _res;
-            Blocked = _block;
-            Absorbed = _abs;
-            Critical = _crit;
-            Glancing = _glance;
-            Crushing = _crush;
+            Amount = amount;
+            Overkill = overkill;
+            School = school;
+            Resisted = res;
+            Blocked = block;
+            Absorbed = abs;
+            Critical = crit;
+            Glancing = glance;
+            Crushing = crush;
         }
     }
 
@@ -34,12 +34,12 @@
         public int Absorbed { get; set; }
         public bool Critical { get; set; }
 
-        public HealingInfo(int _amount, int _over, int _abs, bool _crit)
+        public HealingInfo(int amount, int over, int abs, bool crit)
         {
-            Amount = _amount;
-            OverHealing = _over;
-            Absorbed = _abs;
-            Critical = _crit;
+            Amount = amount;
+            OverHealing = over;
+            Absorbed = abs;
+            Critical = crit;
         }
     }
 
@@ -49,20 +49,20 @@
         public bool IsOffHand { get; set; }
         public int AmountMissed { get; set; }
 
-        public MissedInfo(MissType _type)
+        public MissedInfo(MissType type)
         {
-            TypeMiss = _type;
+            TypeMiss = type;
         }
 
-        public MissedInfo(int _amount)
+        public MissedInfo(int amount)
         {
-            AmountMissed = _amount;
+            AmountMissed = amount;
         }
 
-        public MissedInfo(MissType _type, int _amount)
+        public MissedInfo(MissType type, int amount)
         {
-            TypeMiss = _type;
-            AmountMissed = _amount;
+            TypeMiss = type;
+            AmountMissed = amount;
         }
 
         public enum MissType

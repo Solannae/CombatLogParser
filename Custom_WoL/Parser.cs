@@ -28,12 +28,12 @@ namespace Custom_WoL
                 string token;
                 while ((token = reader.ReadLine()) != null)
                 {
-                    var timestamp = token.Split(new string[] { "  " }, 2, StringSplitOptions.RemoveEmptyEntries)[0];
+                    var timestamp = token.Split(new[] { "  " }, 2, StringSplitOptions.RemoveEmptyEntries)[0];
                     //Split CSV without taking into account quoted commas
-                    var arguments = Regex.Split(token.Split(new string[] { "  " }, 2, StringSplitOptions.RemoveEmptyEntries)[1], ",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
-                    Entry tmp_entry = new Entry(DateTime.ParseExact(timestamp, "MM/dd hh:mm:ss.fff", CultureInfo.InvariantCulture));
-                    tmp_entry.Fill(arguments);
-                    Entries.Enqueue(tmp_entry);
+                    var arguments = Regex.Split(token.Split(new[] { "  " }, 2, StringSplitOptions.RemoveEmptyEntries)[1], ",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
+                    var tmpEntry = new Entry(DateTime.ParseExact(timestamp, "MM/dd hh:mm:ss.fff", CultureInfo.InvariantCulture));
+                    tmpEntry.Fill(arguments);
+                    Entries.Enqueue(tmpEntry);
                 }
             }
         }
@@ -45,8 +45,8 @@ namespace Custom_WoL
                 Encounters.Add(new Encounter(Entries));
 
             //Remove encounters shorter than 5 seconds
-            TimeSpan five_sec = new TimeSpan(0, 0, 5);
-            Encounters.RemoveAll(u => u.End - u.Start < five_sec);
+            var fiveSec = new TimeSpan(0, 0, 5);
+            Encounters.RemoveAll(u => u.End - u.Start < fiveSec);
             Encounters.RemoveAll(u => u.NPC.Count == 0);
             Encounters.RemoveAll(u => u.Players.All(v => v.Value.DamageDone == 0));
             MergeCloseEncounters();
@@ -57,8 +57,9 @@ namespace Custom_WoL
             var i = 0;
             while (i < Encounters.Count - 1)
             {
-                TimeSpan fifteen_sec = new TimeSpan(0, 0, 0, 15);
-                if (Encounters[i + 1].Start - Encounters[i].End < fifteen_sec)
+                var fifteenSec = new TimeSpan(0, 0, 0, 15);
+
+                if (Encounters[i + 1].Start - Encounters[i].End < fifteenSec)
                 {
                     //Merge both encounters
                     Encounters[i].End = Encounters[i + 1].End;

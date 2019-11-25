@@ -51,28 +51,28 @@ namespace Custom_WoL
             return null;
         }
 
-        public void CheckCombatEnd(bool is_player, DateTime curr_time)
+        public void CheckCombatEnd(bool isPlayer, DateTime currTime)
         {
-            var data = (is_player) ? Players : NPC;
+            var data = (isPlayer) ? Players : NPC;
 
             //Inactivity timer
             foreach (var entity in data.Where(u => u.Value.IsDead == false))
             {
-                if (curr_time - entity.Value.LastActive > Inactivity)
+                if (currTime - entity.Value.LastActive > Inactivity)
                     entity.Value.IsDead = true;
             }
 
-            if (curr_time - LastDamage > DmgInactivity || data.All(u => u.Value.IsDead == true))
+            if (currTime - LastDamage > DmgInactivity || data.All(u => u.Value.IsDead == true))
             {
                 IsOver = true;
-                End = (LastDamage.HasValue) ? LastDamage.Value : curr_time;
+                End = LastDamage ?? currTime;
             }
         }
 
         public void AddEntry(Entry entry)
         {
-            CombatInfo source = AddEntity(entry.SourceEntity);
-            CombatInfo dest = AddEntity(entry.DestEntity);
+            var source = AddEntity(entry.SourceEntity);
+            var dest = AddEntity(entry.DestEntity);
 
             switch (entry.Suffix)
             {

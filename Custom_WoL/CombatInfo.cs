@@ -16,14 +16,14 @@ namespace Custom_WoL
             IsDead = true;
         }
 
-        public CombatInfo(long _dd, long _dt, long _hd, long _ht, bool _is_dead, DateTime _last_active)
+        public CombatInfo(long dd, long dt, long hd, long ht, bool isDead, DateTime lastActive)
         {
-            DamageDone = _dd;
-            DamageTaken = _dt;
-            HealingDone = _hd;
-            HealingTaken = _ht;
-            IsDead = _is_dead;
-            LastActive = _last_active;
+            DamageDone = dd;
+            DamageTaken = dt;
+            HealingDone = hd;
+            HealingTaken = ht;
+            IsDead = isDead;
+            LastActive = lastActive;
         }
 
         public static CombatInfo operator +(CombatInfo a, CombatInfo b)

@@ -6,11 +6,11 @@
         public string Name { get; set; }
         public int School { get; set; }
 
-        public Spell(int _id, string _name, int _school)
+        public Spell(int id, string name, int school)
         {
-            ID = _id;
-            Name = _name;
-            School = _school;
+            ID = id;
+            Name = name;
+            School = school;
         }
     }
 }

@@ -4,11 +4,11 @@ using System.Linq;
 
 namespace Custom_WoL
 {
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-            Parser parser = new Parser(ConfigurationManager.AppSettings["logPath"]);
+            var parser = new Parser(ConfigurationManager.AppSettings["logPath"]);
             parser.Parse();
             parser.BuildEncountersList();
             PrettyPrinter.PrintEncountersInfos(parser.Encounters);

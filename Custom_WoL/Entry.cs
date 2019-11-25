@@ -21,9 +21,9 @@ namespace Custom_WoL
         public int Amount { get; set; }
         public int ExtraAmount { get; set; }
 
-        public Entry(DateTime _time)
+        public Entry(DateTime time)
         {
-            Timestamp = _time;
+            Timestamp = time;
         }
 
         public int HexaToInt(string nb)
@@ -62,42 +62,42 @@ namespace Custom_WoL
             DestEntity = new Entity(HexaToLong(tokens[5]), tokens[6], HexaToInt(tokens[7]), HexaToInt(tokens[8]));
         }
 
-        public void FindPrefix(string event_type)
+        public void FindPrefix(string eventType)
         {
             //Three specific cases where an event type must be considered as another one
-            if (event_type == "DAMAGE_SHIELD" || event_type == "DAMAGE_SPLIT" || event_type == "DAMAGE_SHIELD_MISSED")
+            if (eventType == "DAMAGE_SHIELD" || eventType == "DAMAGE_SPLIT" || eventType == "DAMAGE_SHIELD_MISSED")
                 Prefix = EventPrefix.SPELL;
-            else if (event_type.Contains("SWING"))
+            else if (eventType.Contains("SWING"))
                 Prefix = EventPrefix.SWING;
-            else if (event_type.Contains("RANGE"))
+            else if (eventType.Contains("RANGE"))
                 Prefix = EventPrefix.RANGE;
-            else if (event_type.Contains("ENVIRONMENTAL"))
+            else if (eventType.Contains("ENVIRONMENTAL"))
                 Prefix = EventPrefix.ENVIRONMENTAL;
-            else if (event_type.Contains("SPELL_PERIODIC"))
+            else if (eventType.Contains("SPELL_PERIODIC"))
                 Prefix = EventPrefix.SPELL_PERIODIC;
-            else if (event_type.Contains("SPELL_BUILDING"))
+            else if (eventType.Contains("SPELL_BUILDING"))
                 Prefix = EventPrefix.SPELL_BUILDING;
-            else if (event_type.Contains("SPELL"))
+            else if (eventType.Contains("SPELL"))
                 Prefix = EventPrefix.SPELL;
-            else if (event_type.Contains("ENCHANT"))
+            else if (eventType.Contains("ENCHANT"))
                 Prefix = EventPrefix.ENCHANT;
-            else if (event_type.Contains("PARTY"))
+            else if (eventType.Contains("PARTY"))
                 Prefix = EventPrefix.PARTY;
-            else if (event_type.Contains("UNIT"))
+            else if (eventType.Contains("UNIT"))
                 Prefix = EventPrefix.UNIT;
         }
 
-        public void FindSuffix(string event_type)
+        public void FindSuffix(string eventType)
         {
             //Three specific cases where an event type must be considered as another one
-            if (event_type == "DAMAGE_TYPE" || event_type == "DAMAGE_SPLIT")
+            if (eventType == "DAMAGE_TYPE" || eventType == "DAMAGE_SPLIT")
                 Suffix = EventSuffix.DAMAGE;
-            else if (event_type == "DAMAGE_SHIELD_MISSED")
+            else if (eventType == "DAMAGE_SHIELD_MISSED")
                 Suffix = EventSuffix.MISSED;
             else
             {
-                var suffix_str = event_type.Split(new string[] { Prefix.ToString() }, StringSplitOptions.RemoveEmptyEntries)[0].Substring(1);
-                Enum.TryParse(suffix_str, out EventSuffix suff);
+                var suffixStr = eventType.Split(new[] { Prefix.ToString() }, StringSplitOptions.RemoveEmptyEntries)[0].Substring(1);
+                Enum.TryParse(suffixStr, out EventSuffix suff);
                 Suffix = suff;
             }
         }
@@ -117,15 +117,12 @@ namespace Custom_WoL
                     Enum.TryParse(tokens[9], out EnvironmentalType env);
                     Environment = env;
                     break;
-
-                default:
-                    break;
             }
         }
 
         public void FillSuffixFlags(string[] tokens)
         {
-            AuraType tmp_aura;
+            AuraType tmpAura;
             switch (Suffix)
             {
                 case EventSuffix.DAMAGE:
@@ -205,26 +202,23 @@ namespace Custom_WoL
                 case EventSuffix.DISPEL:
                 case EventSuffix.STOLEN:
                     ExtraSpellCast = new Spell(HexaToInt(tokens[12]), tokens[13], HexaToInt(tokens[14]));
-                    Enum.TryParse(tokens[15], out tmp_aura);
-                    Aura = tmp_aura;
+                    Enum.TryParse(tokens[15], out tmpAura);
+                    Aura = tmpAura;
                     break;
 
                 case EventSuffix.AURA_APPLIED:
                 case EventSuffix.AURA_BROKEN:
                 case EventSuffix.AURA_REFRESH:
                 case EventSuffix.AURA_REMOVED:
-                    Enum.TryParse(tokens[12], out tmp_aura);
-                    Aura = tmp_aura;
+                    Enum.TryParse(tokens[12], out tmpAura);
+                    Aura = tmpAura;
                     break;
 
                 case EventSuffix.AURA_APPLIED_DOSE:
                 case EventSuffix.AURA_REMOVED_DOSE:
-                    Enum.TryParse(tokens[12], out tmp_aura);
-                    Aura = tmp_aura;
+                    Enum.TryParse(tokens[12], out tmpAura);
+                    Aura = tmpAura;
                     Amount = HexaToInt(tokens[13]);
-                    break;
-
-                default:
                     break;
             }
         }
